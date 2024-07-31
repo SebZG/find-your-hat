@@ -10,8 +10,11 @@ class Field {
       this.field = field;
       this.X = 0;
       this.Y = 0;
-      // Set the "home" position before the game starts
-      // this.field[0][0] = pathCharacter;
+      this.playing;
+      this.turn = 0;
+      this.holesAdded = 0;
+      this.maxHoles; // Set the maximum number of holes to add
+      this.turnsToAddHole; // Set the number of turns after which a hole is added
    }
 
    static generateField(height, width, percentage = 0.1) {
@@ -36,31 +39,55 @@ class Field {
       return field;
    }
 
+   addHole() {
+      // Generate a random location for the hole
+      const holeLocation = {
+         y: Math.floor(Math.random() * this.field.length),
+         x: Math.floor(Math.random() * this.field[0].length),
+      };
+      // Make sure the hole is not at the starting position
+      while (holeLocation.x === this.X && holeLocation.y === this.Y) {
+         holeLocation.y = Math.floor(Math.random() * this.field.length);
+         holeLocation.x = Math.floor(Math.random() * this.field[0].length);
+      }
+      this.field[holeLocation.y][holeLocation.x] = hole;
+   }
+
    play() {
-      let playing = true;
+      this.chooseMode();
+      this.playing = true;
+
       // Generate random starting position
-      this.X = Math.floor(Math.random() * (this.field[0].length - 1)) + 1;
       this.Y = Math.floor(Math.random() * (this.field.length - 1)) + 1;
+      this.X = Math.floor(Math.random() * (this.field[0].length - 1)) + 1;
       this.field[this.Y][this.X] = pathCharacter;
 
-      while (playing) {
+      while (this.playing) {
          this.print();
-         this.ask();
+         this.whichWay();
          if (!this.isInBounds()) {
             console.log('Out of bounds!');
-            playing = false;
+            this.playing = false;
             break;
          } else if (this.isHole()) {
             console.log('You fell down a hole!');
-            playing = false;
+            this.playing = false;
             break;
          } else if (this.isHat()) {
             console.log('You found your hat!');
-            playing = false;
+            this.playing = false;
             break;
          }
          // Update the current location on the map
          this.field[this.Y][this.X] = pathCharacter;
+
+         // Add a hole after certain turns
+         if (this.holesAdded < this.maxHoles && this.turn % this.turnsToAddHole === 0) {
+            this.addHole();
+            this.holesAdded++;
+         }
+
+         this.turn++;
       }
    }
 
@@ -70,8 +97,33 @@ class Field {
       ).join('\n');
    }
 
-   ask() {
-      const answer = prompt('Which way? ').toUpperCase();
+   chooseMode() {
+      const answer = prompt('Choose mode (Easy, Medium or Hard): ').toUpperCase();
+      switch (answer) {
+         case 'EASY':
+            this.field = Field.generateField(10, 10, 0.1);
+            this.turnsToAddHole = 5;
+            this.maxHoles = 5;
+            break;
+         case 'MEDIUM':
+            this.field = Field.generateField(10, 10, 0.2);
+            this.turnsToAddHole = 3;
+            this.maxHoles = 7;
+            break;
+         case 'HARD':
+            this.field = Field.generateField(10, 10, 0.3);
+            this.turnsToAddHole = 2;
+            this.maxHoles = 10;
+            break;
+         default:
+            console.log('Enter Easy, Medium or Hard: ');
+            this.chooseMode();
+            break;
+      }
+   }
+
+   whichWay() {
+      const answer = prompt('Which way? (U, D, L or R): ').toUpperCase();
       switch (answer) {
          case 'U':
             this.Y -= 1;
@@ -86,8 +138,8 @@ class Field {
             this.X += 1;
             break;
          default:
-            console.log('Enter U, D, L or R.');
-            this.ask();
+            console.log('Enter U, D, L or R: ');
+            this.whichWay();
             break;
       }
    }
@@ -100,6 +152,7 @@ class Field {
          this.X < this.field[0].length
       );
    }
+
    isHole() {
       return this.field[this.Y][this.X] === hole;
    }
@@ -109,6 +162,6 @@ class Field {
    }
 }
 
-const myfield = new Field(Field.generateField(10, 10, 0.2));
+const myfield = new Field();
 
 myfield.play();
