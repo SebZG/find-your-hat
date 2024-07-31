@@ -11,7 +11,7 @@ class Field {
       this.X = 0;
       this.Y = 0;
       // Set the "home" position before the game starts
-      this.field[0][0] = pathCharacter;
+      // this.field[0][0] = pathCharacter;
    }
 
    static generateField(height, width, percentage = 0.1) {
@@ -38,6 +38,11 @@ class Field {
 
    play() {
       let playing = true;
+      // Generate random starting position
+      this.X = Math.floor(Math.random() * (this.field[0].length - 1)) + 1;
+      this.Y = Math.floor(Math.random() * (this.field.length - 1)) + 1;
+      this.field[this.Y][this.X] = pathCharacter;
+
       while (playing) {
          this.print();
          this.ask();
@@ -60,10 +65,9 @@ class Field {
    }
 
    print() {
-      const displayString = this.field.map(row => {
-         return row.join('');
-      }).join('\n');
-      console.log(displayString);
+      this.field.map(row =>
+         console.log(row.join(''))
+      ).join('\n');
    }
 
    ask() {
